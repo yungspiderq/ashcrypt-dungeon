@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101310">
+  <meta name="description" content="Пепельный склеп — подземелье с боями в реальном времени, случайной добычей и пепельной Печатью.">
+  <title>Пепельный склеп · Ashcrypt</title>
+  <link rel="icon" type="image/png" href="assets/icon.png">
+  <link rel="stylesheet" href="style.css">
+  <script defer src="engine.js"></script>
+  <script defer src="art.js"></script>
+  <script defer src="game.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="shell top-inner">
+      <div class="brand"><span class="brand-symbol" data-icon="logo"></span><div><strong>ASHCRYPT</strong><span>ПЕПЕЛЬНЫЙ СКЛЕП</span></div></div>
+      <div class="top-actions">
+        <span class="save" id="save-status"><i></i> <span>Забег сохраняется</span></span>
+        <button type="button" id="audio" class="icon-button" aria-label="Включить звук" title="Включить звук" data-icon="mute"></button>
+        <button type="button" id="help" class="icon-button" aria-label="Управление" title="Управление" data-icon="help"></button>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell main">
+    <section class="run-bar" aria-label="Текущий забег">
+      <div class="run-title"><div class="eyebrow"><span data-icon="compass"></span><span id="floor-label">ЭТАЖ 01 / 05</span></div><h1 id="floor-name">Преддверие</h1></div>
+      <div class="run-stats">
+        <div class="run-stat"><span class="stat-symbol teal" data-icon="map"></span><div><small>Комнаты</small><strong id="room-count">0 / 5</strong></div></div>
+        <div class="run-stat"><span class="stat-symbol red" data-icon="skull"></span><div><small>Побеждено</small><strong id="kill-count">0</strong></div></div>
+        <div class="run-stat"><span class="stat-symbol gold" data-icon="ash"></span><div><small>Прах</small><strong id="ash-count">0</strong></div></div>
+      </div>
+    </section>
+
+    <div class="dashboard">
+      <section class="battle panel" aria-label="Подземелье">
+        <div class="battle-top">
+          <div class="battle-title"><span class="battle-glyph" data-icon="door"></span><div><h2 id="room-name">Вход в склеп</h2><span id="room-state"><i></i> Враги поблизости</span></div></div>
+          <button type="button" class="quiet" id="pause"><span data-icon="pause"></span> Пауза</button>
+        </div>
+        <div class="viewport" id="viewport">
+          <canvas id="dungeon" width="960" height="600" aria-label="Арена. Для перемещения используй WASD или стрелки. Для атаки используй пробел или нажми на арену."></canvas>
+          <div class="arena-outline" aria-hidden="true"></div>
+          <div class="hint" id="hint"><span data-icon="sword"></span> <span>Двигайся, чтобы начать бой</span></div>
+          <div class="arena-event" id="arena-event" aria-live="polite" hidden></div>
+        </div>
+        <div class="vitals">
+          <div class="vital health"><span class="vital-icon red" data-icon="heart"></span><div><div class="vital-label"><span>Здоровье</span><strong id="health-label">100 / 100</strong></div><div class="bar"><i id="health-bar"></i></div></div></div>
+          <div class="vital charge"><span class="vital-icon teal" data-icon="seal"></span><div><div class="vital-label"><span>Пепельная печать</span><strong id="seal-label">0%</strong></div><div class="bar"><i id="seal-bar"></i></div></div></div>
+          <button class="vital-potion" type="button" id="potion"><span class="vital-icon gold" data-icon="potion"></span><div><span>Зелье <kbd>1</kbd></span><strong id="potion-count">×2</strong></div></button>
+        </div>
+        <div class="touch-controls" id="touch-controls" aria-label="Сенсорное управление">
+          <div class="direction-pad">
+            <button type="button" data-direction="ArrowUp" aria-label="Вверх">↑</button><button type="button" data-direction="ArrowLeft" aria-label="Влево">←</button><button type="button" data-direction="ArrowDown" aria-label="Вниз">↓</button><button type="button" data-direction="ArrowRight" aria-label="Вправо">→</button>
+          </div>
+          <div class="touch-actions"><button type="button" data-action="attack"><span data-icon="sword"></span><small>Удар</small></button><button type="button" data-action="dash"><span data-icon="dash"></span><small>Рывок</small></button><button type="button" data-action="seal"><span data-icon="seal"></span><small>Печать</small></button><button type="button" data-action="interact"><span data-icon="hand"></span><small>Действие</small></button></div>
+        </div>
+      </section>
+
+      <aside class="sidebar">
+        <section class="panel map-panel" aria-labelledby="map-title">
+          <div class="panel-heading"><div><div class="eyebrow"><span data-icon="compass"></span> РАЗВЕДКА</div><h2 id="map-title">Карта склепа</h2></div><span class="small-tag" id="map-floor">01</span></div>
+          <canvas id="map" width="520" height="210" aria-label="Схема комнат этажа"></canvas>
+          <div class="map-legend"><span><i></i> Ты здесь</span><span><i></i> Зачищено</span><span><span data-icon="stairs"></span> Спуск</span></div>
+        </section>
+
+        <section class="panel pack-panel" aria-labelledby="pack-title">
+          <div class="panel-heading"><div><div class="eyebrow"><span data-icon="bag"></span> ДОБЫЧА</div><h2 id="pack-title">Снаряжение</h2></div><span class="small-tag" id="item-count">0 / 8</span></div>
+          <div id="equipment" class="equipment"></div>
+          <div class="bag-heading">Рюкзак <span id="bag-help">Выбери предмет</span></div>
+          <div id="bag" class="bag" aria-label="Рюкзак"></div>
+        </section>
+
+        <section class="panel log-panel" aria-labelledby="log-title">
+          <div class="panel-heading"><div><div class="eyebrow"><span data-icon="scroll"></span> СОБЫТИЯ</div><h2 id="log-title">Журнал</h2></div></div>
+          <ul id="log"></ul>
+        </section>
+      </aside>
+    </div>
+
+    <footer class="footer">
+      <div class="controls"><span><kbd>WASD</kbd> Движение</span><span><kbd>Пробел</kbd> Удар</span><span><kbd>Shift</kbd> Рывок</span><span><kbd>Q</kbd> Печать</span><span><kbd>E</kbd> Взаимодействие</span></div>
+      <span class="version">ASHCRYPT <span>v1.0.0</span></span>
+    </footer>
+  </main>
+
+  <dialog class="modal" id="pause-dialog" aria-labelledby="pause-title">
+    <div class="modal-head"><div><div class="eyebrow">ПЕПЕЛЬНЫЙ СКЛЕП</div><h2 id="pause-title">Пауза</h2></div><button type="button" class="icon-button" data-close aria-label="Закрыть" data-icon="close"></button></div>
+    <div class="modal-body"><button type="button" class="primary" data-close>Продолжить</button><button type="button" class="secondary" id="restart">Начать новый забег</button></div>
+  </dialog>
+  <dialog class="modal" id="help-dialog" aria-labelledby="help-title">
+    <div class="modal-head"><div><div class="eyebrow">ПЕПЕЛЬНЫЙ СКЛЕП</div><h2 id="help-title">Управление</h2></div><button type="button" class="icon-button" data-close aria-label="Закрыть" data-icon="close"></button></div>
+    <div class="modal-body help-body">
+      <dl><dt>Движение</dt><dd>WASD или стрелки</dd><dt>Удар</dt><dd>Пробел или щелчок по арене</dd><dt>Рывок сквозь удар</dt><dd>Shift</dd><dt>Пепельная печать</dt><dd>Q при заряде 100%</dd><dt>Поднять предмет, открыть спуск</dt><dd>E вблизи цели</dd><dt>Выпить зелье</dt><dd>1</dd><dt>Пауза</dt><dd>Esc</dd></dl>
+      <p>Убийства заряжают Печать. Красная область предупреждает об атаке. Зачищай комнаты, чтобы открыть двери и спуск.</p>
+    </div>
+  </dialog>
+  <dialog class="modal" id="item-dialog" aria-labelledby="item-title">
+    <div class="modal-head"><div><div class="eyebrow" id="item-rarity"></div><h2 id="item-title"></h2></div><button type="button" class="icon-button" data-close aria-label="Закрыть" data-icon="close"></button></div>
+    <div class="modal-body"><p id="item-details"></p><p class="muted" id="item-compare"></p><div class="modal-actions"><button type="button" id="equip" class="primary">Экипировать</button><button type="button" id="salvage" class="secondary">Разобрать</button></div></div>
+  </dialog>
+  <dialog class="modal relic-modal" id="relic-dialog" aria-labelledby="relic-title">
+    <div class="modal-head"><div><div class="eyebrow"><span data-icon="seal"></span> ГРАНИ ПЕЧАТИ</div><h2 id="relic-title">Выбери усиление</h2></div></div>
+    <div class="modal-body"><p>Эффект останется до конца забега. После выбора откроется следующий этаж.</p><div id="relic-options"></div></div>
+  </dialog>
+  <dialog class="modal" id="result-dialog" aria-labelledby="result-title">
+    <div class="modal-head"><div><div class="eyebrow">КОНЕЦ ЗАБЕГА</div><h2 id="result-title"></h2></div></div>
+    <div class="modal-body"><p id="result-details"></p><p class="muted" id="record-details"></p><button type="button" id="new-run" class="primary">Новый забег</button></div>
+  </dialog>
+</body>
+</html>
